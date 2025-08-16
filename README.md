@@ -1,14 +1,29 @@
 # ClarityFin Backend API
 
-A robust Go backend for the ClarityFin financial management application, built with Gin, GORM, and PostgreSQL.
+A robust Go backend for the ClarityFin financial management application, built with clean architecture principles, Gin, GORM, and PostgreSQL.
+
+## 🏗️ Architecture
+
+This project follows **Clean Architecture** principles with clear separation of concerns:
+
+- **Domain Layer**: Business entities and interfaces
+- **Repository Layer**: Data access abstraction
+- **Service Layer**: Business logic implementation
+- **Use Case Layer**: Application orchestration
+- **Handler Layer**: HTTP request/response handling
+- **Infrastructure Layer**: External concerns (database, config)
 
 ## 🚀 Features
 
+- **Clean Architecture**: Well-structured, maintainable, and testable codebase
 - **User Authentication**: JWT-based authentication with phone number and password
 - **Database Integration**: PostgreSQL with GORM ORM
 - **Configuration Management**: YAML-based configuration with Viper
 - **RESTful API**: Clean API endpoints with proper HTTP status codes
 - **Security**: Password hashing with bcrypt and JWT token validation
+- **Dependency Injection**: Proper dependency management and inversion of control
+- **Standardized Responses**: Consistent API response format
+- **CORS Support**: Cross-origin resource sharing enabled
 
 ## 📁 Project Structure
 
@@ -16,21 +31,37 @@ A robust Go backend for the ClarityFin financial management application, built w
 clarityfin-api/
 ├── cmd/
 │   └── api/
-│       └── main.go              # Application entry point
+│       └── main.go                    # Application entry point
 ├── internal/
 │   ├── config/
-│   │   └── config.go            # Configuration management
+│   │   └── config.go                  # Configuration management
 │   ├── database/
-│   │   └── database.go          # Database connection and setup
+│   │   └── database.go                # Database connection and setup
+│   ├── domain/
+│   │   ├── user.go                    # User domain entity and interfaces
+│   │   └── subscription.go            # Subscription domain entity and interfaces
+│   ├── dto/
+│   │   ├── auth.go                    # Authentication DTOs
+│   │   └── subscription.go            # Subscription DTOs
 │   ├── handlers/
-│   │   ├── auth.go              # Authentication handlers
-│   │   └── subscription.go      # Subscription handlers
-│   └── models/
-│       ├── user.go              # User model
-│       └── subscription.go      # Subscription model
-├── config.yaml                  # Configuration file
-├── go.mod                       # Go module file
-└── README.md                    # This file
+│   │   ├── auth_handler.go            # Authentication HTTP handlers
+│   │   └── subscription_handler.go    # Subscription HTTP handlers
+│   ├── middleware/
+│   │   └── auth.go                    # JWT authentication middleware
+│   ├── repository/
+│   │   ├── user_repository.go         # User data access layer
+│   │   └── subscription_repository.go # Subscription data access layer
+│   └── service/
+│       ├── user_service.go            # User business logic
+│       ├── user_usecase.go            # User application logic
+│       ├── subscription_service.go    # Subscription business logic
+│       └── subscription_usecase.go    # Subscription application logic
+├── pkg/
+│   └── response/
+│       └── response.go                # Standardized response utilities
+├── config.yaml                        # Configuration file
+├── go.mod                             # Go module file
+└── README.md                          # This file
 ```
 
 ## 🛠️ Setup Instructions
@@ -84,6 +115,15 @@ Content-Type: application/json
 }
 ```
 
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "data": null
+}
+```
+
 #### Login User
 ```http
 POST /api/v1/auth/login
@@ -98,7 +138,11 @@ Content-Type: application/json
 **Response**:
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
 }
 ```
 
@@ -113,17 +157,40 @@ Authorization: Bearer <your-jwt-token>
 **Response**:
 ```json
 {
-  "subscriptions": [
-    {
-      "name": "Netflix",
-      "amount": 199
-    },
-    {
-      "name": "Spotify", 
-      "amount": 119
-    }
-  ]
+  "success": true,
+  "message": "Subscriptions retrieved successfully",
+  "data": {
+    "subscriptions": [
+      {
+        "id": 1,
+        "name": "Netflix",
+        "amount": 199,
+        "user_id": 1,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "total": 1
+  }
 }
+```
+
+#### Create Subscription
+```http
+POST /api/v1/subscriptions
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "name": "Spotify",
+  "amount": 119
+}
+```
+
+#### Get Subscription by ID
+```http
+GET /api/v1/subscriptions/1
+Authorization: Bearer <your-jwt-token>
 ```
 
 ## 🔧 Configuration
@@ -159,7 +226,15 @@ jwt:
      -d '{"phone_number": "+1234567890", "password": "testpassword"}'
    ```
 
-3. **Access protected endpoint**:
+3. **Create a subscription**:
+   ```bash
+   curl -X POST http://localhost:8080/api/v1/subscriptions \
+     -H "Authorization: Bearer <your-jwt-token>" \
+     -H "Content-Type: application/json" \
+     -d '{"name": "Netflix", "amount": 199}'
+   ```
+
+4. **Get subscriptions**:
    ```bash
    curl -X GET http://localhost:8080/api/v1/subscriptions \
      -H "Authorization: Bearer <your-jwt-token>"
@@ -171,18 +246,30 @@ jwt:
 - **JWT Authentication**: Secure token-based authentication
 - **Input Validation**: Request validation using Gin's binding
 - **Database Security**: Prepared statements via GORM
+- **CORS Protection**: Cross-origin request handling
+
+## 🏛️ Architecture Benefits
+
+- **Maintainability**: Clear separation of concerns makes code easy to maintain
+- **Testability**: Each layer can be tested independently
+- **Scalability**: Easy to add new features and modify existing ones
+- **Dependency Inversion**: High-level modules don't depend on low-level modules
+- **Single Responsibility**: Each component has a single, well-defined purpose
 
 ## 🚀 Next Steps
 
-This is the foundational backend for ClarityFin. Future enhancements could include:
+This is the foundational backend for ClarityFin with clean architecture. Future enhancements could include:
 
+- Unit and integration tests
 - User profile management
 - Real subscription data integration
 - Payment processing
 - Analytics and reporting
 - Rate limiting
 - Logging and monitoring
-- Unit and integration tests
+- API documentation with Swagger
+- Docker containerization
+- CI/CD pipeline
 
 ## 📝 License
 

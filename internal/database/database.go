@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hardiksharma/clarityfin-api/internal/config"
-	"github.com/hardiksharma/clarityfin-api/internal/models"
+	"github.com/hardiksharma/clarityfin-api/internal/domain"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -23,7 +23,7 @@ func Connect(config config.DatabaseConfig) {
 	fmt.Println("Database connection successfully opened")
 
 	// AutoMigrate will create the tables based on your GORM models
-	err = DB.AutoMigrate(&models.User{}, &models.Subscription{})
+	err = DB.AutoMigrate(&domain.User{}, &domain.Subscription{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

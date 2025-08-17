@@ -10,12 +10,14 @@ import (
 // AuthHandler handles authentication-related HTTP requests
 type AuthHandler struct {
 	userUseCase domain.UserUseCase
+	otpUseCase  domain.OTPUseCase
 }
 
 // NewAuthHandler creates a new instance of AuthHandler
-func NewAuthHandler(userUseCase domain.UserUseCase) *AuthHandler {
+func NewAuthHandler(userUseCase domain.UserUseCase, otpUseCase domain.OTPUseCase) *AuthHandler {
 	return &AuthHandler{
 		userUseCase: userUseCase,
+		otpUseCase:  otpUseCase,
 	}
 }
 
@@ -34,6 +36,31 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	response.Success(c, nil, "Registration successful")
+}
+
+// RegisterWithOTP handles user registration with OTP verification
+func (h *AuthHandler) RegisterWithOTP(c *gin.Context) {
+	var req dto.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Verify OTP first
+	valid, err := h.otpUseCase.VerifyOTP(req.PhoneNumber, req.OTPCode)
+	if err != nil || !valid {
+		response.BadRequest(c, "Invalid OTP")
+		return
+	}
+
+	// Register user
+	err = h.userUseCase.Register(req.PhoneNumber, req.Password)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	response.Success(c, nil, "Registration with OTP successful")
 }
 
 // Login handles user authentication

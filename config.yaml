@@ -2,7 +2,17 @@ server:
   port: "8080"
 
 database:
-  dsn: "host=localhost user=postgres password=yourpassword dbname=clarityfin port=5432 sslmode=disable"
+  dsn: "clarityfin.db"
 
 jwt:
   secret: "a-very-secret-key-that-is-long-and-secure"
+
+sms:
+  provider: "twilio"  # twilio or msg91
+  twilio:
+    account_sid: "your_twilio_account_sid"
+    auth_token: "your_twilio_auth_token"
+    from_number: "+1234567890"
+  msg91:
+    api_key: "your_msg91_api_key"
+    sender_id: "CLARITY"

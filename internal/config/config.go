@@ -7,6 +7,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	SMS      SMSConfig
 }
 
 type ServerConfig struct {
@@ -21,6 +22,23 @@ type JWTConfig struct {
 	Secret string
 }
 
+type SMSConfig struct {
+	Provider string
+	Twilio   TwilioConfig
+	MSG91    MSG91Config
+}
+
+type TwilioConfig struct {
+	AccountSID string
+	AuthToken  string
+	FromNumber string
+}
+
+type MSG91Config struct {
+	APIKey   string
+	SenderID string
+}
+
 // LoadConfig reads configuration from file or environment variables.
 func LoadConfig() (config Config, err error) {
 	viper.AddConfigPath(".")
@@ -31,9 +49,9 @@ func LoadConfig() (config Config, err error) {
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		return config, err
 	}
 
 	err = viper.Unmarshal(&config)
-	return
+	return config, err
 }

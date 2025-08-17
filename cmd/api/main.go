@@ -25,18 +25,22 @@ func main() {
 	// 3. Initialize repositories
 	userRepo := repository.NewUserRepository(database.DB)
 	subscriptionRepo := repository.NewSubscriptionRepository(database.DB)
+	otpRepo := repository.NewOTPRepository(database.DB)
 
 	// 4. Initialize services
 	userService := service.NewUserService(userRepo, cfg.JWT.Secret)
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, userRepo)
+	otpService := service.NewOTPService(otpRepo, cfg.SMS)
 
 	// 5. Initialize use cases
 	userUseCase := service.NewUserUseCase(userService)
 	subscriptionUseCase := service.NewSubscriptionUseCase(subscriptionService)
+	otpUseCase := service.NewOTPUseCase(otpService)
 
 	// 6. Initialize handlers
-	authHandler := handlers.NewAuthHandler(userUseCase)
+	authHandler := handlers.NewAuthHandler(userUseCase, otpUseCase)
 	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionUseCase, userService)
+	otpHandler := handlers.NewOTPHandler(otpUseCase)
 
 	// 7. Set up the Gin router
 	router := gin.Default()
@@ -51,7 +55,15 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/register", authHandler.Register)
+			auth.POST("/register/otp", authHandler.RegisterWithOTP)
 			auth.POST("/login", authHandler.Login)
+		}
+
+		// OTP routes are public
+		otp := api.Group("/otp")
+		{
+			otp.POST("/send", otpHandler.SendOTP)
+			otp.POST("/verify", otpHandler.VerifyOTP)
 		}
 
 		// Subscription routes are protected

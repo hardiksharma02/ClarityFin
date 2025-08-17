@@ -4,6 +4,7 @@ package dto
 type RegisterRequest struct {
 	PhoneNumber string `json:"phone_number" binding:"required" validate:"required,min=10,max=15"`
 	Password    string `json:"password" binding:"required" validate:"required,min=6"`
+	OTPCode     string `json:"otp_code,omitempty" validate:"omitempty,len=6"`
 }
 
 // LoginRequest represents the request body for user login
